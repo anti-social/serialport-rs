@@ -52,7 +52,6 @@ mod raw {
             all(
                 target_os = "linux",
                 not(any(
-                    target_env = "musl",
                     target_arch = "powerpc",
                     target_arch = "powerpc64"
                 ))
@@ -61,7 +60,7 @@ mod raw {
         tcgets2,
         b'T',
         0x2A,
-        libc::termios2
+        crate::posix::termios2::termios2
     );
     ioctl_write_ptr!(
         #[cfg(any(
@@ -69,7 +68,6 @@ mod raw {
             all(
                 target_os = "linux",
                 not(any(
-                    target_env = "musl",
                     target_arch = "powerpc",
                     target_arch = "powerpc64"
                 ))
@@ -78,7 +76,7 @@ mod raw {
         tcsets2,
         b'T',
         0x2B,
-        libc::termios2
+        crate::posix::termios2::termios2
     );
     #[cfg(any(target_os = "ios", target_os = "macos"))]
     const IOSSIOSPEED: libc::c_ulong = 0x80045402;
@@ -168,13 +166,12 @@ pub fn tiocmbis(fd: RawFd, status: SerialLines) -> Result<()> {
     all(
         target_os = "linux",
         not(any(
-            target_env = "musl",
             target_arch = "powerpc",
             target_arch = "powerpc64"
         ))
     )
 ))]
-pub fn tcgets2(fd: RawFd) -> Result<libc::termios2> {
+pub fn tcgets2(fd: RawFd) -> Result<crate::posix::termios2::termios2> {
     let mut options = std::mem::MaybeUninit::uninit();
     match unsafe { raw::tcgets2(fd, options.as_mut_ptr()) } {
         Ok(_) => unsafe { Ok(options.assume_init()) },
@@ -187,13 +184,12 @@ pub fn tcgets2(fd: RawFd) -> Result<libc::termios2> {
     all(
         target_os = "linux",
         not(any(
-            target_env = "musl",
             target_arch = "powerpc",
             target_arch = "powerpc64"
         ))
     )
 ))]
-pub fn tcsets2(fd: RawFd, options: &libc::termios2) -> Result<()> {
+pub fn tcsets2(fd: RawFd, options: &crate::posix::termios2::termios2) -> Result<()> {
     unsafe { raw::tcsets2(fd, options) }
         .map(|_| ())
         .map_err(|e| e.into())
